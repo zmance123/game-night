@@ -18,12 +18,22 @@
           </li>
         </ul>
         <ul class="navbar-nav">
-          <li class="nav-item">
-            <RouterLink class="nav-link" to="/login">Login</RouterLink>
-          </li>
-          <li class="nav-item">
-            <RouterLink class="nav-link" to="/register">Register</RouterLink>
-          </li>
+          <template v-if="user">
+            <li class="nav-item">
+              <RouterLink class="nav-link" to="/profile">{{ profileName }}</RouterLink>
+            </li>
+            <li class="nav-item">
+              <a href="#" class="nav-link" @click.prevent="signOut">Logout</a>
+            </li>
+          </template>
+          <template v-else>
+            <li class="nav-item">
+              <RouterLink class="nav-link" to="/login">Login</RouterLink>
+            </li>
+            <li class="nav-item">
+              <RouterLink class="nav-link" to="/register">Register</RouterLink>
+            </li>
+          </template>
         </ul>
       </div>
     </div>
@@ -31,5 +41,19 @@
 </template>
 
 <script setup>
-import { RouterLink } from 'vue-router'
+  import { computed } from 'vue'
+  import { useRouter } from 'vue-router'
+  import { useAuthStore } from '@/stores/authStore.js'
+  import { RouterLink } from 'vue-router'
+
+  const router = useRouter()
+  const authStore = useAuthStore()
+
+  const user = computed(() => authStore.user)
+  const profileName = computed(() => (authStore.profile && authStore.profile.name) || 'Profile')
+
+  async function signOut() {
+    await authStore.logout()
+    router.push('/')
+  }
 </script>
