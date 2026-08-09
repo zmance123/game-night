@@ -10,6 +10,11 @@
             </p>
             <p class="card-text">{{ game.description }}</p>
         </div>    
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+            <RouterLink
+                :to="{ name: 'game-detail', params: { id: game.id } }"
+                class="btn btn-sm btn-outline-primary">Details</RouterLink>
+        </div>
     </div>
 </template>
 
