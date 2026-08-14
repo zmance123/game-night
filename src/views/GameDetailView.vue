@@ -7,9 +7,21 @@
     <div v-else-if="game">
       <div class="d-flex justify-content-between align-items-start mb-3">
         <div>
-          <h1 class="mb-1">{{ game.title }}</h1>
-          <span class="badge badge-light mr-2">{{ game.genre }}</span>
+            <h1 class="mb-1">{{ game.title }}</h1>
+            <span class="badge badge-light mr-2">{{ game.genre }}</span>
+            <span :class="game.available ? 'badge badge-success' : 'badge badge-danger'">
+                {{ game.available ? 'Available' : 'Borrowed' }}
+          </span>
         </div>
+        <button
+          v-if="user"
+          class="btn btn-primary"
+          :disabled="!game.available || busy"
+          @click="borrow"
+        >
+          {{ busy ? 'Working...' : 'Borrow' }}
+        </button>
+        <RouterLink v-else to="/login" class="btn btn-outline-primary">Sign in to borrow</RouterLink>
       </div>
 
       <div class="row mb-4">
@@ -50,14 +62,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getGame } from '@/services/games.js'
+import { borrowGame } from '@/services/borrowings.js'
+import { useAuthStore } from '@/stores/authStore.js'
 
 const route = useRoute()
+const authStore = useAuthStore()
 
 const loading = ref(true)
 const game = ref(null)
+const busy = ref(false)
+const user = computed(() => authStore.user)
 
 async function load() {
   loading.value = true
@@ -66,5 +83,17 @@ async function load() {
 }
 
 onMounted(load)
+
+async function borrow() {
+  if (!user.value || !game.value.available) return
+  busy.value = true
+  try {
+    const name = (authStore.profile && authStore.profile.name) || user.value.email
+    await borrowGame(game.value, user.value.uid, name)
+    game.value.available = false
+  } finally {
+    busy.value = false
+  }
+}
 
 </script>
