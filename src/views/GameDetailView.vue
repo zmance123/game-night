@@ -11,7 +11,11 @@
             <span class="badge badge-light mr-2">{{ game.genre }}</span>
             <span :class="game.available ? 'badge badge-success' : 'badge badge-danger'">
                 {{ game.available ? 'Available' : 'Borrowed' }}
-          </span>
+            </span>
+              <span v-if="game.averageRating" class="ml-2 text-muted">
+              {{ game.averageRating.toFixed(1) }} / 5
+              <small>({{ game.ratingCount || 0 }} ratings)</small>
+            </span>
         </div>
         <button
           v-if="user"
@@ -55,6 +59,42 @@
       <p>{{ game.description }}</p>
 
       <hr />
+
+      <h4 class="mb-3">Ratings</h4>
+
+        <div v-if="user" class="card mb-3">
+        <div class="card-body">
+          <h6 class="mb-3">Leave a rating</h6>
+          <div class="form-group">
+            <label>Score</label>
+            <select v-model.number="newRating.score" class="form-control">
+              <option v-for="n in 5" :key="n" :value="n">{{ n }} star{{ n > 1 ? 's' : '' }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Comment</label>
+            <textarea
+              v-model="newRating.comment"
+              class="form-control"
+              rows="2"
+              placeholder="A short thought about the game"
+            ></textarea>
+          </div>
+          <button class="btn btn-primary" :disabled="ratingBusy" @click="submitRating">
+            {{ ratingBusy ? 'Posting...' : 'Post rating' }}
+          </button>
+        </div>
+      </div>
+      <p v-if="!ratings.length" class="text-muted">No ratings yet.</p>
+      <div v-for="r in ratings" :key="r.id" class="card mb-2">
+        <div class="card-body py-2">
+          <div class="d-flex justify-content-between">
+            <strong>{{ r.userName }}</strong>
+            <span class="text-warning">{{ '★'.repeat(r.score) }}{{ '☆'.repeat(5 - r.score) }}</span>
+          </div>
+          <p class="mb-0 text-muted">{{ r.comment }}</p>
+        </div>
+      </div>
     </div>
 
     <div v-else class="alert alert-warning">Game not found.</div>
@@ -67,18 +107,25 @@ import { useRoute } from 'vue-router'
 import { getGame } from '@/services/games.js'
 import { borrowGame } from '@/services/borrowings.js'
 import { useAuthStore } from '@/stores/authStore.js'
+import { listRatings, addRating } from '@/services/ratings.js'
 
 const route = useRoute()
 const authStore = useAuthStore()
 
 const loading = ref(true)
 const game = ref(null)
+const ratings = ref([])
 const busy = ref(false)
 const user = computed(() => authStore.user)
+const ratingBusy = ref(false)
+const newRating = ref({ score: 5, comment: '' })
 
 async function load() {
   loading.value = true
   game.value = await getGame(route.params.id)
+  if (game.value) {
+      ratings.value = await listRatings(game.value.id)
+  }
   loading.value = false
 }
 
@@ -94,6 +141,24 @@ async function borrow() {
   } finally {
     busy.value = false
   }
+}
+
+async function submitRating() {
+    if (!user.value) return
+    ratingBusy.value = true
+    try {
+        const name = (authStore.profile && authStore.profile.name) || user.value.email
+        await addRating(game.value.id, {
+            userId: user.value.uid,
+            userName: name,
+            score: newRating.value.score,
+            comment: newRating.value.comment.trim()
+        })
+        newRating.value = { score: 5, comment: '' }
+        await load()
+    } finally {
+        ratingBusy.value = false
+    }
 }
 
 </script>
