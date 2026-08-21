@@ -6,10 +6,11 @@
                 <span class="badge badge-light">{{ game.genre }}</span>
             </div>
             <p class="text-muted small mb-2">
-                {{ game.minPlayers }}-{{ game.maxPlayers }} players · {{ game.durationMinutes }} min · {{ game.difficulty }}
+                {{ game.minPlayers }}-{{ game.maxPlayers }} players · {{ game.durationMinutes }} min
+                · {{ game.difficulty }}
             </p>
             <p class="card-text">{{ game.description }}</p>
-        </div>    
+        </div>
         <div class="card-footer bg-white d-flex justify-content-between align-items-center">
             <span v-if="game.averageRating" class="text-muted small">
                 {{ game.averageRating.toFixed(1) }} / 5 ({{ game.ratingCount || 0 }})
@@ -17,13 +18,15 @@
             <span v-else class="text-muted small">No ratings</span>
             <RouterLink
                 :to="{ name: 'game-detail', params: { id: game.id } }"
-                class="btn btn-sm btn-outline-primary">Details</RouterLink>
+                class="btn btn-sm btn-outline-primary"
+                >Details</RouterLink
+            >
         </div>
     </div>
 </template>
 
 <script setup>
-defineProps({
-  game: { type: Object, required: true }
-})
+    defineProps({
+        game: { type: Object, required: true },
+    })
 </script>

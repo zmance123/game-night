@@ -5,12 +5,12 @@ import { getFirestore } from 'firebase/firestore'
 
 // Firebase konfiguracija
 const firebaseConfig = {
-  apiKey: 'AIzaSyCSn-W0FqmCUcMFlyshjeCvqgLj0HNuyJM',
-  authDomain: 'game-night-8fdf1.firebaseapp.com',
-  projectId: 'game-night-8fdf1',
-  storageBucket: 'game-night-8fdf1.firebasestorage.app',
-  messagingSenderId: '1011095720421',
-  appId: '1:1011095720421:web:accd98bc45008b31645f0c',
+    apiKey: 'AIzaSyCSn-W0FqmCUcMFlyshjeCvqgLj0HNuyJM',
+    authDomain: 'game-night-8fdf1.firebaseapp.com',
+    projectId: 'game-night-8fdf1',
+    storageBucket: 'game-night-8fdf1.firebasestorage.app',
+    messagingSenderId: '1011095720421',
+    appId: '1:1011095720421:web:accd98bc45008b31645f0c',
 }
 
 // Firebase inicijalizacija
