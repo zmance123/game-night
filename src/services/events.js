@@ -4,6 +4,7 @@ import {
     getDoc,
     getDocs,
     updateDoc,
+    deleteDoc,
     query,
     orderBy,
     arrayUnion,
@@ -37,4 +38,17 @@ export async function cancelRegistration(eventId, userId) {
         attendees: arrayRemove(userId),
         registered: increment(-1),
     })
+}
+
+export async function createEvent(data) {
+    const ref = await addDoc(eventsCollection, { ...data, registered: 0, attendees: [] })
+    return ref.id
+}
+
+export async function updateEvent(id, data) {
+    await updateDoc(doc(db, 'events', id), data)
+}
+
+export async function deleteEvent(id) {
+    await deleteDoc(doc(db, 'events', id))
 }

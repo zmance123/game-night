@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import {
     createUserWithEmailAndPassword,
@@ -12,6 +12,8 @@ import { auth, db } from '@/firebase.js'
 export const useAuthStore = defineStore('authStore', () => {
     const user = ref(null)
     const profile = ref(null)
+
+    const isAdmin = computed(() => profile.value && profile.value.role === 'admin')
 
     onAuthStateChanged(auth, async (currentUser) => {
         user.value = currentUser
@@ -41,5 +43,5 @@ export const useAuthStore = defineStore('authStore', () => {
         await signOut(auth)
     }
 
-    return { user, profile, register, login, logout }
+    return { user, profile, isAdmin, register, login, logout }
 })

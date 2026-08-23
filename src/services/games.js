@@ -1,4 +1,14 @@
-import { collection, doc, getDoc, getDocs, query, orderBy } from 'firebase/firestore'
+import {
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    query,
+    orderBy,
+} from 'firebase/firestore'
 import { db } from '@/firebase.js'
 
 const gamesCollection = collection(db, 'games')
@@ -12,4 +22,17 @@ export async function getGame(id) {
     const snap = await getDoc(doc(db, 'games', id))
     if (!snap.exists()) return null
     return { id: snap.id, ...snap.data() }
+}
+
+export async function createGame(data) {
+    const ref = await addDoc(gamesCollection, data)
+    return ref.id
+}
+
+export async function updateGame(id, data) {
+    await updateDoc(doc(db, 'games', id), data)
+}
+
+export async function deleteGame(id) {
+    await deleteDoc(doc(db, 'games', id))
 }
