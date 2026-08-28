@@ -46,3 +46,13 @@ export function isOverdue(borrowing) {
     if (borrowing.returnedAt) return false
     return new Date(borrowing.returnBy) < new Date()
 }
+
+export async function listActiveBorrowings() {
+    const snap = await getDocs(query(borrowingsCollection, where('returnedAt', '==', null)))
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
+export async function returnBorrowing(borrowingId, gameId) {
+    await updateDoc(doc(db, 'borrowings', borrowingId), { returnedAt: new Date().toISOString() })
+    await updateDoc(doc(db, 'games', gameId), { available: true })
+}

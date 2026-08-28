@@ -156,6 +156,64 @@
                     </tbody>
                 </table>
             </div>
+            <div v-if="tab === 'registrations'">
+                <h3 class="mb-3">Registrations per night</h3>
+                <div v-for="e in events" :key="e.id" class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="mb-2">
+                            {{ e.title }} <small class="text-muted">- {{ e.date }}</small>
+                        </h5>
+                        <ul v-if="(e.attendees || []).length" class="mb-0">
+                            <li v-for="uid in e.attendees" :key="uid">
+                                {{ userName(uid) }}
+                            </li>
+                        </ul>
+                        <p v-else class="mb-0 text-muted">No registrations yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="tab === 'borrowings'">
+                <h3 class="mb-3">Active borrowings</h3>
+                <p v-if="!borrowings.length" class="text-muted">No active borrowings.</p>
+                <table v-else class="table">
+                    <thead>
+                        <tr>
+                            <th>Game</th>
+                            <th>Borrower</th>
+                            <th>Borrowed on</th>
+                            <th>Return by</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            v-for="b in borrowings"
+                            :key="b.id"
+                            :class="{ 'table-danger': overdue(b) }"
+                        >
+                            <td>{{ b.gameTitle }}</td>
+                            <td>{{ b.userName }}</td>
+                            <td>{{ formatDate(b.borrowedAt) }}</td>
+                            <td>{{ formatDate(b.returnBy) }}</td>
+                            <td>
+                                <span :class="overdue(b) ? 'text-danger' : 'text-success'">
+                                    {{ overdue(b) ? 'Overdue' : 'On time' }}
+                                </span>
+                            </td>
+                            <td class="text-right">
+                                <button
+                                    class="btn btn-sm btn-outline-primary"
+                                    @click="markReturned(b)"
+                                >
+                                    Mark returned
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </template>
     </div>
 </template>
@@ -166,6 +224,9 @@
     import EventForm from '@/components/EventForm.vue'
     import { listGames, createGame, updateGame, deleteGame } from '@/services/games.js'
     import { listEvents, createEvent, updateEvent, deleteEvent } from '@/services/events.js'
+    import { listActiveBorrowings, returnBorrowing, isOverdue } from '@/services/borrowings.js'
+    import { collection, getDocs } from 'firebase/firestore'
+    import { db } from '@/firebase.js'
 
     import { useAuthStore } from '@/stores/authStore.js'
 
@@ -174,14 +235,30 @@
     const tab = ref('games')
     const games = ref([])
     const events = ref([])
+    const borrowings = ref([])
     const editingGame = ref(null)
     const editingEvent = ref(null)
+    const users = ref({})
 
     const isAdmin = computed(() => authStore.isAdmin)
 
     async function refresh() {
         games.value = await listGames()
         events.value = await listEvents()
+        borrowings.value = await listActiveBorrowings()
+    }
+
+    async function loadUsers() {
+        const snap = await getDocs(collection(db, 'users'))
+        const map = {}
+        snap.docs.forEach((d) => {
+            map[d.id] = d.data().name
+        })
+        users.value = map
+    }
+
+    function userName(uid) {
+        return users.value[uid] || uid
     }
 
     watch(
@@ -189,9 +266,12 @@
         async (admin) => {
             if (!admin) {
                 games.value = []
+                events.value = []
+                users.value = {}
                 return
             }
             await refresh()
+            await loadUsers()
         },
         { immediate: true },
     )
@@ -234,5 +314,20 @@
         if (!confirm(`Delete night "${e.title}"?`)) return
         await deleteEvent(e.id)
         await refresh()
+    }
+
+    async function markReturned(b) {
+        if (!confirm(`Mark "${b.gameTitle}" as returned by ${b.userName}?`)) return
+        await returnBorrowing(b.id, b.gameId)
+        await refresh()
+    }
+
+    function overdue(b) {
+        return isOverdue(b)
+    }
+
+    function formatDate(iso) {
+        const d = new Date(iso)
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
     }
 </script>
