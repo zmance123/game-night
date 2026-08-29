@@ -40,6 +40,11 @@
                                 {{ registered ? 'Cancel' : 'Register' }}
                             </button>
                         </div>
+                        <div v-if="response.message" class="card-footer bg-white">
+                            <span :class="response.error ? 'text-danger' : 'text-success'">{{
+                                response.message
+                            }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -66,6 +71,7 @@
     const loading = ref(true)
     const event = ref(null)
     const busy = ref(false)
+    const response = ref({ error: false, message: '' })
 
     const user = computed(() => authStore.user)
 
@@ -90,6 +96,7 @@
     async function toggleRegistration() {
         if (!user.value) return
         busy.value = true
+        response.value.message = ''
         try {
             if (registered.value) {
                 await cancelRegistration(event.value.id, user.value.uid)
@@ -97,6 +104,9 @@
                 await registerForEvent(event.value.id, user.value.uid)
             }
             await load()
+        } catch (error) {
+            response.value.error = true
+            response.value.message = 'Could not change registration: ' + error.message
         } finally {
             busy.value = false
         }

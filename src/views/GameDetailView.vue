@@ -30,6 +30,12 @@
                 >
             </div>
 
+            <span
+                v-if="borrowResponse.message"
+                :class="borrowResponse.error ? 'text-danger' : 'text-success'"
+                >{{ borrowResponse.message }}</span
+            >
+
             <div class="row mb-4">
                 <div class="col-md-4">
                     <div class="card">
@@ -87,6 +93,13 @@
                     <button class="btn btn-primary" :disabled="ratingBusy" @click="submitRating">
                         {{ ratingBusy ? 'Posting...' : 'Post rating' }}
                     </button>
+
+                    <span
+                        v-if="ratingResponse.message"
+                        class="ml-2"
+                        :class="ratingResponse.error ? 'text-danger' : 'text-success'"
+                        >{{ ratingResponse.message }}</span
+                    >
                 </div>
             </div>
             <p v-if="!ratings.length" class="text-muted">No ratings yet.</p>
@@ -125,6 +138,8 @@
     const user = computed(() => authStore.user)
     const ratingBusy = ref(false)
     const newRating = ref({ score: 5, comment: '' })
+    const borrowResponse = ref({ error: false, message: '' })
+    const ratingResponse = ref({ error: false, message: '' })
 
     async function load() {
         loading.value = true
@@ -140,10 +155,14 @@
     async function borrow() {
         if (!user.value || !game.value.available) return
         busy.value = true
+        borrowResponse.value.message = ''
         try {
             const name = (authStore.profile && authStore.profile.name) || user.value.email
             await borrowGame(game.value, user.value.uid, name)
             game.value.available = false
+        } catch (error) {
+            borrowResponse.value.error = true
+            borrowResponse.value.message = 'Could not borrow: ' + error.message
         } finally {
             busy.value = false
         }
@@ -152,6 +171,7 @@
     async function submitRating() {
         if (!user.value) return
         ratingBusy.value = true
+        ratingResponse.value.message = ''
         try {
             const name = (authStore.profile && authStore.profile.name) || user.value.email
             await addRating(game.value.id, {
@@ -162,6 +182,9 @@
             })
             newRating.value = { score: 5, comment: '' }
             await load()
+        } catch (error) {
+            ratingResponse.value.error = true
+            ratingResponse.value.message = 'Could not post rating: ' + error.message
         } finally {
             ratingBusy.value = false
         }

@@ -7,6 +7,10 @@
         </div>
 
         <template v-else>
+            <p v-if="response.message" :class="response.error ? 'text-danger' : 'text-success'">
+                {{ response.message }}
+            </p>
+
             <ul class="nav nav-tabs mb-4">
                 <li class="nav-item">
                     <a
@@ -239,6 +243,7 @@
     const editingGame = ref(null)
     const editingEvent = ref(null)
     const users = ref({})
+    const response = ref({ error: false, message: '' })
 
     const isAdmin = computed(() => authStore.isAdmin)
 
@@ -285,41 +290,76 @@
     }
 
     async function saveGame(data) {
-        if (editingGame.value && editingGame.value.id) {
-            await updateGame(editingGame.value.id, data)
-        } else {
-            await createGame(data)
+        try {
+            if (editingGame.value && editingGame.value.id) {
+                await updateGame(editingGame.value.id, data)
+            } else {
+                await createGame(data)
+            }
+            editingGame.value = null
+            await refresh()
+            response.value.error = false
+            response.value.message = 'Game saved.'
+        } catch (error) {
+            response.value.error = true
+            response.value.message = 'Could not save game: ' + error.message
         }
-        editingGame.value = null
-        await refresh()
     }
 
     async function saveEvent(data) {
-        if (editingEvent.value && editingEvent.value.id) {
-            await updateEvent(editingEvent.value.id, data)
-        } else {
-            await createEvent(data)
+        try {
+            if (editingEvent.value && editingEvent.value.id) {
+                await updateEvent(editingEvent.value.id, data)
+            } else {
+                await createEvent(data)
+            }
+            editingEvent.value = null
+            await refresh()
+            response.value.error = false
+            response.value.message = 'Night saved.'
+        } catch (error) {
+            response.value.error = true
+            response.value.message = 'Could not save night: ' + error.message
         }
-        editingEvent.value = null
-        await refresh()
     }
 
     async function removeGame(g) {
         if (!confirm(`Delete game "${g.title}"?`)) return
-        await deleteGame(g.id)
-        await refresh()
+        try {
+            await deleteGame(g.id)
+            await refresh()
+            response.value.error = false
+            response.value.message = 'Game deleted.'
+        } catch (error) {
+            response.value.error = true
+            response.value.message = 'Could not delete game: ' + error.message
+        }
     }
 
     async function removeEvent(e) {
         if (!confirm(`Delete night "${e.title}"?`)) return
-        await deleteEvent(e.id)
-        await refresh()
+        try {
+            await deleteEvent(e.id)
+            await refresh()
+            response.value.error = false
+            response.value.message = 'Night deleted.'
+        } catch (error) {
+            response.value.error = true
+            response.value.message = 'Could not delete night: ' + error.message
+        }
     }
 
     async function markReturned(b) {
         if (!confirm(`Mark "${b.gameTitle}" as returned by ${b.userName}?`)) return
-        await returnBorrowing(b.id, b.gameId)
-        await refresh()
+        try {
+            await returnBorrowing(b.id, b.gameId)
+            await refresh()
+            response.value.error = false
+            response.value.message = 'Marked as returned.'
+        } catch (error) {
+            response.value.error = true
+            response.value.message = 'Could not mark as returned: ' + error.message
+        }
     }
 
     function overdue(b) {
