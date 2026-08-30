@@ -1,5 +1,5 @@
 <template>
-    <div class="card h-100">
+    <div class="card card-hover h-100">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-start">
                 <h5 class="card-title mb-1">{{ game.title }}</h5>
