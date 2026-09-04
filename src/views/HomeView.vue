@@ -1,5 +1,7 @@
 <template>
     <div>
+        <div v-if="error" class="alert alert-danger">{{ error }}</div>
+
         <div class="jumbotron py-4 mb-4">
             <h1 class="display-5">Game Night</h1>
             <p class="lead">A place where board games meet good company.</p>
@@ -86,37 +88,42 @@
     })
     const popularGames = ref([])
     const activeVisitors = ref([])
+    const error = ref('')
 
     onMounted(async () => {
-        const [games, events, usersSnap] = await Promise.all([
-            listGames(),
-            listEvents(),
-            getDocs(collection(db, 'users')),
-        ])
+        try {
+            const [games, events, usersSnap] = await Promise.all([
+                listGames(),
+                listEvents(),
+                getDocs(collection(db, 'users')),
+            ])
 
-        const today = new Date().toISOString().slice(0, 10)
-        stats.value.gamesInCatalog = games.length
-        stats.value.nightsHeld = events.filter((e) => e.date < today).length
-        stats.value.visitors = usersSnap.size
+            const today = new Date().toISOString().slice(0, 10)
+            stats.value.gamesInCatalog = games.length
+            stats.value.nightsHeld = events.filter((e) => e.date < today).length
+            stats.value.visitors = usersSnap.size
 
-        popularGames.value = games
-            .filter((g) => g.averageRating)
-            .sort((a, b) => b.averageRating - a.averageRating)
-            .slice(0, 5)
+            popularGames.value = games
+                .filter((g) => g.averageRating)
+                .sort((a, b) => b.averageRating - a.averageRating)
+                .slice(0, 5)
 
-        const counts = {}
-        events.forEach((e) => {
-            ;(e.attendees || []).forEach((uid) => {
-                counts[uid] = (counts[uid] || 0) + 1
+            const counts = {}
+            events.forEach((e) => {
+                ;(e.attendees || []).forEach((uid) => {
+                    counts[uid] = (counts[uid] || 0) + 1
+                })
             })
-        })
-        const users = {}
-        usersSnap.docs.forEach((d) => {
-            users[d.id] = d.data().name
-        })
-        activeVisitors.value = Object.entries(counts)
-            .map(([uid, n]) => ({ id: uid, name: users[uid] || 'Unknown', nightsAttended: n }))
-            .sort((a, b) => b.nightsAttended - a.nightsAttended)
-            .slice(0, 5)
+            const users = {}
+            usersSnap.docs.forEach((d) => {
+                users[d.id] = d.data().name
+            })
+            activeVisitors.value = Object.entries(counts)
+                .map(([uid, n]) => ({ id: uid, name: users[uid] || 'Unknown', nightsAttended: n }))
+                .sort((a, b) => b.nightsAttended - a.nightsAttended)
+                .slice(0, 5)
+        } catch (err) {
+            error.value = 'Could not load home page data: ' + err.message
+        }
     })
 </script>

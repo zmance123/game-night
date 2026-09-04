@@ -57,6 +57,8 @@
 
         <div v-if="loading" class="text-center text-muted py-5">Loading games...</div>
 
+        <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
+
         <div v-else-if="!filteredGames.length" class="alert alert-info">
             No games match the current filters.
         </div>
@@ -75,6 +77,7 @@
     import GameCard from '@/components/GameCard.vue'
 
     const loading = ref(true)
+    const error = ref('')
     const games = ref([])
     const filters = ref({
         search: '',
@@ -84,8 +87,13 @@
     })
 
     onMounted(async () => {
-        games.value = await listGames()
-        loading.value = false
+        try {
+            games.value = await listGames()
+        } catch (err) {
+            error.value = 'Could not load games: ' + err.message
+        } finally {
+            loading.value = false
+        }
     })
 
     const genres = computed(() => {

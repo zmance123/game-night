@@ -15,7 +15,8 @@
             </div>
 
             <h3 class="mb-3">Borrowed games</h3>
-            <p v-if="!borrowings.length" class="text-muted">No borrowings yet.</p>
+            <div v-if="error" class="alert alert-danger">{{ error }}</div>
+            <p v-else-if="!borrowings.length" class="text-muted">No borrowings yet.</p>
             <table v-else class="table table-bordered mb-4">
                 <thead>
                     <tr>
@@ -53,6 +54,7 @@
     const authStore = useAuthStore()
 
     const borrowings = ref([])
+    const error = ref('')
 
     const user = computed(() => authStore.user)
     const profile = computed(() => authStore.profile)
@@ -64,7 +66,11 @@
                 borrowings.value = []
                 return
             }
-            borrowings.value = await listUserBorrowings(currentUser.uid)
+            try {
+                borrowings.value = await listUserBorrowings(currentUser.uid)
+            } catch (err) {
+                error.value = 'Could not load borrowings: ' + err.message
+            }
         },
         { immediate: true },
     )
