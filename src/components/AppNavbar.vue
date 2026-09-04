@@ -13,7 +13,7 @@
                     <li class="nav-item">
                         <RouterLink class="nav-link" to="/events">Events</RouterLink>
                     </li>
-                    <li class="nav-item">
+                    <li v-if="isAdmin" class="nav-item">
                         <RouterLink class="nav-link" to="/admin">Admin</RouterLink>
                     </li>
                 </ul>
@@ -52,6 +52,7 @@
     const authStore = useAuthStore()
 
     const user = computed(() => authStore.user)
+    const isAdmin = computed(() => authStore.isAdmin)
     const profileName = computed(() => (authStore.profile && authStore.profile.name) || 'Profile')
 
     async function signOut() {

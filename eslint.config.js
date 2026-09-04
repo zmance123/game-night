@@ -8,4 +8,13 @@ export default [
   globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
 
   ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json'),
+
+  {
+    languageOptions: {
+      globals: { confirm: 'readonly' },
+    },
+    rules: {
+      'no-undef': 'error',
+    },
+  },
 ]
