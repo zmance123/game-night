@@ -14,6 +14,27 @@
                 </div>
             </div>
 
+            <h3 class="mb-3">Notifications</h3>
+            <p v-if="!notifications.length" class="text-muted">No notifications.</p>
+            <ul v-else class="list-group mb-4">
+                <li
+                    v-for="notification in notifications"
+                    :key="notification.id"
+                    class="list-group-item d-flex justify-content-between align-items-center"
+                >
+                    <span :class="{ 'text-muted': notification.read }">
+                        {{ notification.message }}
+                    </span>
+                    <button
+                        v-if="!notification.read"
+                        class="btn btn-sm btn-outline-primary"
+                        @click="markRead(notification)"
+                    >
+                        Mark as read
+                    </button>
+                </li>
+            </ul>
+
             <h3 class="mb-3">Borrowed games</h3>
             <div v-if="error" class="alert alert-danger">{{ error }}</div>
             <p v-else-if="!borrowings.length" class="text-muted">No borrowings yet.</p>
@@ -50,10 +71,16 @@
     import { ref, computed, watch } from 'vue'
     import { useAuthStore } from '@/stores/authStore.js'
     import { listUserBorrowings, isOverdue } from '@/services/borrowings.js'
+    import {
+        syncOverdueNotifications,
+        listNotifications,
+        markAsRead,
+    } from '@/services/notifications.js'
 
     const authStore = useAuthStore()
 
     const borrowings = ref([])
+    const notifications = ref([])
     const error = ref('')
 
     const user = computed(() => authStore.user)
@@ -64,12 +91,15 @@
         async (currentUser) => {
             if (!currentUser) {
                 borrowings.value = []
+                notifications.value = []
                 return
             }
             try {
                 borrowings.value = await listUserBorrowings(currentUser.uid)
+                await syncOverdueNotifications(currentUser.uid)
+                notifications.value = await listNotifications(currentUser.uid)
             } catch (err) {
-                error.value = 'Could not load borrowings: ' + err.message
+                error.value = 'Could not load profile data: ' + err.message
             }
         },
         { immediate: true },
@@ -82,5 +112,14 @@
 
     function overdue(b) {
         return isOverdue(b)
+    }
+
+    async function markRead(notification) {
+        try {
+            await markAsRead(notification.id)
+            notification.read = true
+        } catch (err) {
+            error.value = 'Could not update notification: ' + err.message
+        }
     }
 </script>
