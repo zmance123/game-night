@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, addDoc, updateDoc, query, orderBy } from 'firebase/firestore'
+import { collection, doc, getDocs, setDoc, updateDoc, query, orderBy } from 'firebase/firestore'
 import { db } from '@/firebase.js'
 
 function ratingsCollection(gameId) {
@@ -11,7 +11,7 @@ export async function listRatings(gameId) {
 }
 
 export async function addRating(gameId, { userId, userName, score, comment }) {
-    await addDoc(ratingsCollection(gameId), {
+    await setDoc(doc(ratingsCollection(gameId), userId), {
         userId,
         userName,
         score,
