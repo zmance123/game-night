@@ -48,6 +48,15 @@
                         >Borrowings</a
                     >
                 </li>
+                <li class="nav-item">
+                    <a
+                        href="#"
+                        class="nav-link"
+                        :class="{ active: tab === 'statistics' }"
+                        @click.prevent="tab = 'statistics'"
+                        >Statistics</a
+                    >
+                </li>
             </ul>
 
             <div v-if="tab === 'games'">
@@ -218,6 +227,43 @@
                     </tbody>
                 </table>
             </div>
+
+            <div v-if="tab === 'statistics'">
+                <h3 class="mb-3">Statistics</h3>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted text-uppercase mb-2">Nights held</h6>
+                                <p class="display-4 mb-0">{{ nightsHeld }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted text-uppercase mb-2">Registered visitors</h6>
+                                <p class="display-4 mb-0">{{ visitorCount }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 class="mb-3">Most active visitors</h4>
+                <p v-if="!activeVisitors.length" class="text-muted">No registrations yet.</p>
+                <ul v-else class="list-group">
+                    <li
+                        v-for="visitor in activeVisitors"
+                        :key="visitor.id"
+                        class="list-group-item d-flex justify-content-between align-items-center"
+                    >
+                        <span>{{ visitor.name }}</span>
+                        <span class="badge badge-secondary badge-pill"
+                            >{{ visitor.nightsAttended }} nights</span
+                        >
+                    </li>
+                </ul>
+            </div>
         </template>
     </div>
 </template>
@@ -246,6 +292,26 @@
     const response = ref({ error: false, message: '' })
 
     const isAdmin = computed(() => authStore.isAdmin)
+
+    const nightsHeld = computed(() => {
+        const today = new Date().toISOString().slice(0, 10)
+        return events.value.filter((e) => e.date < today).length
+    })
+
+    const visitorCount = computed(() => Object.keys(users.value).length)
+
+    const activeVisitors = computed(() => {
+        const counts = {}
+        events.value.forEach((e) => {
+            ;(e.attendees || []).forEach((uid) => {
+                counts[uid] = (counts[uid] || 0) + 1
+            })
+        })
+        return Object.entries(counts)
+            .map(([uid, n]) => ({ id: uid, name: userName(uid), nightsAttended: n }))
+            .sort((a, b) => b.nightsAttended - a.nightsAttended)
+            .slice(0, 5)
+    })
 
     async function refresh() {
         games.value = await listGames()
