@@ -275,8 +275,7 @@
     import { listGames, createGame, updateGame, deleteGame } from '@/services/games.js'
     import { listEvents, createEvent, updateEvent, deleteEvent } from '@/services/events.js'
     import { listActiveBorrowings, returnBorrowing, isOverdue } from '@/services/borrowings.js'
-    import { collection, getDocs } from 'firebase/firestore'
-    import { db } from '@/firebase.js'
+    import { listUserNames } from '@/services/users.js'
 
     import { useAuthStore } from '@/stores/authStore.js'
     import { useResponse } from '@/composables/useResponse.js'
@@ -321,15 +320,6 @@
         borrowings.value = await listActiveBorrowings()
     }
 
-    async function loadUsers() {
-        const snap = await getDocs(collection(db, 'users'))
-        const map = {}
-        snap.docs.forEach((d) => {
-            map[d.id] = d.data().name
-        })
-        users.value = map
-    }
-
     function userName(uid) {
         return users.value[uid] || uid
     }
@@ -344,7 +334,7 @@
                 return
             }
             await refresh()
-            await loadUsers()
+            users.value = await listUserNames()
         },
         { immediate: true },
     )
