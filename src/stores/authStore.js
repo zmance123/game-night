@@ -15,6 +15,10 @@ export const useAuthStore = defineStore('authStore', () => {
 
     const isAdmin = computed(() => profile.value && profile.value.role === 'admin')
 
+    const displayName = computed(
+        () => (profile.value && profile.value.name) || (user.value && user.value.email) || '',
+    )
+
     onAuthStateChanged(auth, async (currentUser) => {
         user.value = currentUser
         if (currentUser) {
@@ -43,5 +47,5 @@ export const useAuthStore = defineStore('authStore', () => {
         await signOut(auth)
     }
 
-    return { user, profile, isAdmin, register, login, logout }
+    return { user, profile, isAdmin, displayName, register, login, logout }
 })

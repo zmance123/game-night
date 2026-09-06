@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div v-if="error" class="alert alert-danger">{{ error }}</div>
+        <div v-if="response.error" class="alert alert-danger">{{ response.message }}</div>
 
         <div class="jumbotron py-4 mb-4">
             <h1 class="display-5">Game Night</h1>
@@ -42,10 +42,12 @@
 <script setup>
     import { ref, onMounted } from 'vue'
     import { listGames } from '@/services/games.js'
+    import { useResponse } from '@/composables/useResponse.js'
+
+    const { response, setError } = useResponse()
 
     const gamesInCatalog = ref(0)
     const popularGames = ref([])
-    const error = ref('')
 
     onMounted(async () => {
         try {
@@ -58,7 +60,7 @@
                 .sort((a, b) => b.averageRating - a.averageRating)
                 .slice(0, 5)
         } catch (err) {
-            error.value = 'Could not load home page data: ' + err.message
+            setError('Could not load home page data: ', err)
         }
     })
 </script>

@@ -36,7 +36,7 @@
             </ul>
 
             <h3 class="mb-3">Borrowed games</h3>
-            <div v-if="error" class="alert alert-danger">{{ error }}</div>
+            <div v-if="response.error" class="alert alert-danger">{{ response.message }}</div>
             <p v-else-if="!borrowings.length" class="text-muted">No borrowings yet.</p>
             <table v-else class="table table-bordered mb-4">
                 <thead>
@@ -56,8 +56,8 @@
                             <span v-if="b.returnedAt" class="text-muted">
                                 Returned on {{ formatDate(b.returnedAt) }}
                             </span>
-                            <span v-else :class="overdue(b) ? 'text-danger' : 'text-success'">
-                                {{ overdue(b) ? 'Overdue' : 'On time' }}
+                            <span v-else :class="isOverdue(b) ? 'text-danger' : 'text-success'">
+                                {{ isOverdue(b) ? 'Overdue' : 'On time' }}
                             </span>
                         </td>
                     </tr>
@@ -76,12 +76,14 @@
         listNotifications,
         markAsRead,
     } from '@/services/notifications.js'
+    import { useResponse } from '@/composables/useResponse.js'
+    import { formatDate } from '@/utils/dateUtils.js'
 
     const authStore = useAuthStore()
+    const { response, setError } = useResponse()
 
     const borrowings = ref([])
     const notifications = ref([])
-    const error = ref('')
 
     const user = computed(() => authStore.user)
     const profile = computed(() => authStore.profile)
@@ -99,27 +101,18 @@
                 await syncOverdueNotifications(currentUser.uid)
                 notifications.value = await listNotifications(currentUser.uid)
             } catch (err) {
-                error.value = 'Could not load profile data: ' + err.message
+                setError('Could not load profile data: ', err)
             }
         },
         { immediate: true },
     )
-
-    function formatDate(iso) {
-        const d = new Date(iso)
-        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-    }
-
-    function overdue(b) {
-        return isOverdue(b)
-    }
 
     async function markRead(notification) {
         try {
             await markAsRead(notification.id)
             notification.read = true
         } catch (err) {
-            error.value = 'Could not update notification: ' + err.message
+            setError('Could not update notification: ', err)
         }
     }
 </script>

@@ -127,9 +127,20 @@
     import { borrowGame } from '@/services/borrowings.js'
     import { useAuthStore } from '@/stores/authStore.js'
     import { listRatings, addRating } from '@/services/ratings.js'
+    import { useResponse } from '@/composables/useResponse.js'
 
     const route = useRoute()
     const authStore = useAuthStore()
+    const {
+        response: borrowResponse,
+        setError: setBorrowError,
+        clear: clearBorrowResponse,
+    } = useResponse()
+    const {
+        response: ratingResponse,
+        setError: setRatingError,
+        clear: clearRatingResponse,
+    } = useResponse()
 
     const loading = ref(true)
     const game = ref(null)
@@ -138,8 +149,6 @@
     const user = computed(() => authStore.user)
     const ratingBusy = ref(false)
     const newRating = ref({ score: 5, comment: '' })
-    const borrowResponse = ref({ error: false, message: '' })
-    const ratingResponse = ref({ error: false, message: '' })
 
     async function load() {
         loading.value = true
@@ -155,14 +164,12 @@
     async function borrow() {
         if (!user.value || !game.value.available) return
         busy.value = true
-        borrowResponse.value.message = ''
+        clearBorrowResponse()
         try {
-            const name = (authStore.profile && authStore.profile.name) || user.value.email
-            await borrowGame(game.value, user.value.uid, name)
+            await borrowGame(game.value, user.value.uid, authStore.displayName)
             game.value.available = false
         } catch (error) {
-            borrowResponse.value.error = true
-            borrowResponse.value.message = 'Could not borrow: ' + error.message
+            setBorrowError('Could not borrow: ', error)
         } finally {
             busy.value = false
         }
@@ -171,20 +178,18 @@
     async function submitRating() {
         if (!user.value) return
         ratingBusy.value = true
-        ratingResponse.value.message = ''
+        clearRatingResponse()
         try {
-            const name = (authStore.profile && authStore.profile.name) || user.value.email
             await addRating(game.value.id, {
                 userId: user.value.uid,
-                userName: name,
+                userName: authStore.displayName,
                 score: newRating.value.score,
                 comment: newRating.value.comment.trim(),
             })
             newRating.value = { score: 5, comment: '' }
             await load()
         } catch (error) {
-            ratingResponse.value.error = true
-            ratingResponse.value.message = 'Could not post rating: ' + error.message
+            setRatingError('Could not post rating: ', error)
         } finally {
             ratingBusy.value = false
         }

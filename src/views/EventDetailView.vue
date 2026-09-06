@@ -64,14 +64,16 @@
     import { useRoute } from 'vue-router'
     import { getEvent, registerForEvent, cancelRegistration } from '@/services/events.js'
     import { useAuthStore } from '@/stores/authStore.js'
+    import { useResponse } from '@/composables/useResponse.js'
+    import { formatDate } from '@/utils/dateUtils.js'
 
     const route = useRoute()
     const authStore = useAuthStore()
+    const { response, setError, clear } = useResponse()
 
     const loading = ref(true)
     const event = ref(null)
     const busy = ref(false)
-    const response = ref({ error: false, message: '' })
 
     const user = computed(() => authStore.user)
 
@@ -88,15 +90,10 @@
 
     onMounted(load)
 
-    function formatDate(iso) {
-        const d = new Date(iso)
-        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-    }
-
     async function toggleRegistration() {
         if (!user.value) return
         busy.value = true
-        response.value.message = ''
+        clear()
         try {
             if (registered.value) {
                 await cancelRegistration(event.value.id, user.value.uid)
@@ -105,8 +102,7 @@
             }
             await load()
         } catch (error) {
-            response.value.error = true
-            response.value.message = 'Could not change registration: ' + error.message
+            setError('Could not change registration: ', error)
         } finally {
             busy.value = false
         }

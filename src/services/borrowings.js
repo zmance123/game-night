@@ -9,15 +9,10 @@ import {
     orderBy,
 } from 'firebase/firestore'
 import { db } from '@/firebase.js'
+import { addDays } from '@/utils/dateUtils.js'
 
 const borrowingsCollection = collection(db, 'borrowings')
 const BORROW_DAYS = 14
-
-function addDays(date, days) {
-    const d = new Date(date)
-    d.setDate(d.getDate() + days)
-    return d
-}
 
 export async function borrowGame(game, userId, userName) {
     const now = new Date()

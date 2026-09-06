@@ -10,16 +10,12 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/firebase.js'
 import { listUserBorrowings, isOverdue } from '@/services/borrowings.js'
+import { formatDate } from '@/utils/dateUtils.js'
 
 const notificationsCollection = collection(db, 'notifications')
 
 function overdueMessage(borrowing) {
-    const dueDate = new Date(borrowing.returnBy).toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    })
-    return `"${borrowing.gameTitle}" was due on ${dueDate}. Please return it.`
+    return `"${borrowing.gameTitle}" was due on ${formatDate(borrowing.returnBy)}. Please return it.`
 }
 
 export async function syncOverdueNotifications(userId) {

@@ -204,15 +204,15 @@
                         <tr
                             v-for="b in borrowings"
                             :key="b.id"
-                            :class="{ 'table-danger': overdue(b) }"
+                            :class="{ 'table-danger': isOverdue(b) }"
                         >
                             <td>{{ b.gameTitle }}</td>
                             <td>{{ b.userName }}</td>
                             <td>{{ formatDate(b.borrowedAt) }}</td>
                             <td>{{ formatDate(b.returnBy) }}</td>
                             <td>
-                                <span :class="overdue(b) ? 'text-danger' : 'text-success'">
-                                    {{ overdue(b) ? 'Overdue' : 'On time' }}
+                                <span :class="isOverdue(b) ? 'text-danger' : 'text-success'">
+                                    {{ isOverdue(b) ? 'Overdue' : 'On time' }}
                                 </span>
                             </td>
                             <td class="text-right">
@@ -279,8 +279,11 @@
     import { db } from '@/firebase.js'
 
     import { useAuthStore } from '@/stores/authStore.js'
+    import { useResponse } from '@/composables/useResponse.js'
+    import { formatDate, todayIso } from '@/utils/dateUtils.js'
 
     const authStore = useAuthStore()
+    const { response, setSuccess, setError } = useResponse()
 
     const tab = ref('games')
     const games = ref([])
@@ -289,12 +292,11 @@
     const editingGame = ref(null)
     const editingEvent = ref(null)
     const users = ref({})
-    const response = ref({ error: false, message: '' })
 
     const isAdmin = computed(() => authStore.isAdmin)
 
     const nightsHeld = computed(() => {
-        const today = new Date().toISOString().slice(0, 10)
+        const today = todayIso()
         return events.value.filter((e) => e.date < today).length
     })
 
@@ -364,11 +366,9 @@
             }
             editingGame.value = null
             await refresh()
-            response.value.error = false
-            response.value.message = 'Game saved.'
+            setSuccess('Game saved.')
         } catch (error) {
-            response.value.error = true
-            response.value.message = 'Could not save game: ' + error.message
+            setError('Could not save game: ', error)
         }
     }
 
@@ -381,11 +381,9 @@
             }
             editingEvent.value = null
             await refresh()
-            response.value.error = false
-            response.value.message = 'Night saved.'
+            setSuccess('Night saved.')
         } catch (error) {
-            response.value.error = true
-            response.value.message = 'Could not save night: ' + error.message
+            setError('Could not save night: ', error)
         }
     }
 
@@ -394,11 +392,9 @@
         try {
             await deleteGame(g.id)
             await refresh()
-            response.value.error = false
-            response.value.message = 'Game deleted.'
+            setSuccess('Game deleted.')
         } catch (error) {
-            response.value.error = true
-            response.value.message = 'Could not delete game: ' + error.message
+            setError('Could not delete game: ', error)
         }
     }
 
@@ -407,11 +403,9 @@
         try {
             await deleteEvent(e.id)
             await refresh()
-            response.value.error = false
-            response.value.message = 'Night deleted.'
+            setSuccess('Night deleted.')
         } catch (error) {
-            response.value.error = true
-            response.value.message = 'Could not delete night: ' + error.message
+            setError('Could not delete night: ', error)
         }
     }
 
@@ -420,20 +414,9 @@
         try {
             await returnBorrowing(b.id, b.gameId)
             await refresh()
-            response.value.error = false
-            response.value.message = 'Marked as returned.'
+            setSuccess('Marked as returned.')
         } catch (error) {
-            response.value.error = true
-            response.value.message = 'Could not mark as returned: ' + error.message
+            setError('Could not mark as returned: ', error)
         }
-    }
-
-    function overdue(b) {
-        return isOverdue(b)
-    }
-
-    function formatDate(iso) {
-        const d = new Date(iso)
-        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
     }
 </script>

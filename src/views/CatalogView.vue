@@ -57,7 +57,7 @@
 
         <div v-if="loading" class="text-center text-muted py-5">Loading games...</div>
 
-        <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
+        <div v-else-if="response.error" class="alert alert-danger">{{ response.message }}</div>
 
         <div v-else-if="!filteredGames.length" class="alert alert-info">
             No games match the current filters.
@@ -75,9 +75,11 @@
     import { ref, computed, onMounted } from 'vue'
     import { listGames } from '@/services/games.js'
     import GameCard from '@/components/GameCard.vue'
+    import { useResponse } from '@/composables/useResponse.js'
+
+    const { response, setError } = useResponse()
 
     const loading = ref(true)
-    const error = ref('')
     const games = ref([])
     const filters = ref({
         search: '',
@@ -90,7 +92,7 @@
         try {
             games.value = await listGames()
         } catch (err) {
-            error.value = 'Could not load games: ' + err.message
+            setError('Could not load games: ', err)
         } finally {
             loading.value = false
         }

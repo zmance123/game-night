@@ -6,7 +6,7 @@
 
         <div v-if="loading" class="text-center text-muted py-5">Loading events...</div>
 
-        <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
+        <div v-else-if="response.error" class="alert alert-danger">{{ response.message }}</div>
 
         <div v-else-if="!events.length" class="alert alert-info">No upcoming events.</div>
 
@@ -44,24 +44,22 @@
 <script setup>
     import { ref, onMounted } from 'vue'
     import { listEvents } from '@/services/events.js'
+    import { useResponse } from '@/composables/useResponse.js'
+    import { formatDate, todayIso } from '@/utils/dateUtils.js'
+
+    const { response, setError } = useResponse()
 
     const loading = ref(true)
-    const error = ref('')
     const events = ref([])
 
     onMounted(async () => {
         try {
-            const today = new Date().toISOString().slice(0, 10)
+            const today = todayIso()
             events.value = (await listEvents()).filter((event) => event.date >= today)
         } catch (err) {
-            error.value = 'Could not load events: ' + err.message
+            setError('Could not load events: ', err)
         } finally {
             loading.value = false
         }
     })
-
-    function formatDate(iso) {
-        const d = new Date(iso)
-        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-    }
 </script>
