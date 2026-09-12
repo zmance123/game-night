@@ -4,6 +4,10 @@
 
         <div v-if="loading" class="text-center text-muted py-5">Loading...</div>
 
+        <div v-else-if="loadResponse.error" class="alert alert-danger">
+            {{ loadResponse.message }}
+        </div>
+
         <div v-else-if="game">
             <div class="d-flex justify-content-between align-items-start mb-3">
                 <div>
@@ -145,6 +149,11 @@
         setError: setRatingError,
         clear: clearRatingResponse,
     } = useResponse()
+    const {
+        response: loadResponse,
+        setError: setLoadError,
+        clear: clearLoadResponse,
+    } = useResponse()
 
     const loading = ref(true)
     const game = ref(null)
@@ -156,11 +165,17 @@
 
     async function load() {
         loading.value = true
-        game.value = await getGame(route.params.id)
-        if (game.value) {
-            ratings.value = await listRatings(game.value.id)
+        clearLoadResponse()
+        try {
+            game.value = await getGame(route.params.id)
+            if (game.value) {
+                ratings.value = await listRatings(game.value.id)
+            }
+        } catch (err) {
+            setLoadError('Could not load game: ', err)
+        } finally {
+            loading.value = false
         }
-        loading.value = false
     }
 
     onMounted(load)

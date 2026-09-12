@@ -4,6 +4,10 @@
 
         <div v-if="loading" class="text-center text-muted py-5">Loading...</div>
 
+        <div v-else-if="loadResponse.error" class="alert alert-danger">
+            {{ loadResponse.message }}
+        </div>
+
         <div v-else-if="event">
             <h1 class="mb-1">{{ event.title }}</h1>
             <p class="text-muted">{{ formatDate(event.date) }} at {{ event.time }}</p>
@@ -78,6 +82,11 @@
     const route = useRoute()
     const authStore = useAuthStore()
     const { response, setError, clear } = useResponse()
+    const {
+        response: loadResponse,
+        setError: setLoadError,
+        clear: clearLoadResponse,
+    } = useResponse()
 
     const loading = ref(true)
     const event = ref(null)
@@ -92,8 +101,14 @@
 
     async function load() {
         loading.value = true
-        event.value = await getEvent(route.params.id)
-        loading.value = false
+        clearLoadResponse()
+        try {
+            event.value = await getEvent(route.params.id)
+        } catch (err) {
+            setLoadError('Could not load event: ', err)
+        } finally {
+            loading.value = false
+        }
     }
 
     onMounted(load)
