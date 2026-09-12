@@ -35,6 +35,20 @@
                 </li>
             </ul>
 
+            <h3 class="mb-3">My events</h3>
+            <p v-if="!events.length" class="text-muted">No registered events.</p>
+            <div v-else class="list-group mb-4">
+                <RouterLink
+                    v-for="event in events"
+                    :key="event.id"
+                    :to="{ name: 'event-detail', params: { id: event.id } }"
+                    class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                >
+                    <span>{{ event.title }}</span>
+                    <span class="text-muted">{{ formatDate(event.date) }} at {{ event.time }}</span>
+                </RouterLink>
+            </div>
+
             <h3 class="mb-3">Borrowed games</h3>
             <div v-if="response.error" class="alert alert-danger">{{ response.message }}</div>
             <p v-else-if="!borrowings.length" class="text-muted">No borrowings yet.</p>
@@ -76,6 +90,7 @@
         listNotifications,
         markAsRead,
     } from '@/services/notifications.js'
+    import { listUserEvents } from '@/services/events.js'
     import { useResponse } from '@/composables/useResponse.js'
     import { formatDate } from '@/utils/dateUtils.js'
 
@@ -84,6 +99,7 @@
 
     const borrowings = ref([])
     const notifications = ref([])
+    const events = ref([])
 
     const user = computed(() => authStore.user)
     const profile = computed(() => authStore.profile)
@@ -94,12 +110,14 @@
             if (!currentUser) {
                 borrowings.value = []
                 notifications.value = []
+                events.value = []
                 return
             }
             try {
                 borrowings.value = await listUserBorrowings(currentUser.uid)
                 await syncOverdueNotifications(currentUser.uid)
                 notifications.value = await listNotifications(currentUser.uid)
+                events.value = await listUserEvents(currentUser.uid)
             } catch (err) {
                 setError('Could not load profile data: ', err)
             }

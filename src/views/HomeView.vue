@@ -20,20 +20,19 @@
             <div class="col-md-8">
                 <h3 class="mb-3">Most popular games</h3>
                 <p v-if="!popularGames.length" class="text-muted">No ratings yet.</p>
-                <ul v-else class="list-group mb-4">
-                    <li
+                <div v-else class="list-group mb-4">
+                    <RouterLink
                         v-for="game in popularGames"
                         :key="game.id"
-                        class="list-group-item d-flex justify-content-between align-items-center"
+                        :to="{ name: 'game-detail', params: { id: game.id } }"
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
                     >
-                        <RouterLink :to="{ name: 'game-detail', params: { id: game.id } }">
-                            {{ game.title }}
-                        </RouterLink>
+                        <span>{{ game.title }}</span>
                         <span class="badge badge-primary badge-pill"
                             >{{ game.averageRating.toFixed(1) }} / 5</span
                         >
-                    </li>
-                </ul>
+                    </RouterLink>
+                </div>
             </div>
         </div>
     </div>

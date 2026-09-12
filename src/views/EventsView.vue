@@ -21,8 +21,8 @@
                             </p>
                             <p class="mb-1">
                                 <strong>Games:</strong>
-                                <span v-for="(g, i) in event.games" :key="g">
-                                    {{ g }}<span v-if="i < event.games.length - 1">, </span>
+                                <span v-for="(g, i) in event.games" :key="g.id || g">
+                                    {{ g.title || g }}<span v-if="i < event.games.length - 1">, </span>
                                 </span>
                             </p>
                             <p class="mb-0 text-muted small">

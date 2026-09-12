@@ -33,7 +33,7 @@
                             :id="'event-game-' + g.id"
                             v-model="form.games"
                             type="checkbox"
-                            :value="g.title"
+                            :value="g.id"
                             class="form-check-input"
                         />
                         <label :for="'event-game-' + g.id" class="form-check-label">{{
@@ -68,16 +68,31 @@
 
     const emit = defineEmits(['submit', 'cancel'])
 
+    function toGameId(entry) {
+        if (typeof entry === 'string') {
+            const match = props.availableGames.find((g) => g.title === entry)
+            return match ? match.id : null
+        }
+        return entry.id
+    }
+
     const base = empty()
     const form = ref(
         props.initial
-            ? { ...base, ...props.initial, games: [...(props.initial.games || [])] }
+            ? {
+                  ...base,
+                  ...props.initial,
+                  games: (props.initial.games || []).map(toGameId).filter(Boolean),
+              }
             : base,
     )
 
     const submitLabel = computed(() => (props.initial ? 'Save changes' : 'Schedule event'))
 
     function submit() {
-        emit('submit', { ...form.value, games: [...form.value.games] })
+        const games = props.availableGames
+            .filter((g) => form.value.games.includes(g.id))
+            .map((g) => ({ id: g.id, title: g.title }))
+        emit('submit', { ...form.value, games })
     }
 </script>

@@ -50,9 +50,17 @@
             </div>
 
             <h4 class="mb-3">Games for this night</h4>
-            <ul class="list-group mb-4">
-                <li v-for="g in event.games" :key="g" class="list-group-item">{{ g }}</li>
-            </ul>
+            <div class="list-group mb-4">
+                <template v-for="g in event.games" :key="g.id || g">
+                    <RouterLink
+                        v-if="g.id"
+                        :to="{ name: 'game-detail', params: { id: g.id } }"
+                        class="list-group-item list-group-item-action"
+                        >{{ g.title }}</RouterLink
+                    >
+                    <span v-else class="list-group-item">{{ g }}</span>
+                </template>
+            </div>
         </div>
 
         <div v-else class="alert alert-warning">Event not found.</div>

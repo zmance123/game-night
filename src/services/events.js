@@ -7,6 +7,7 @@ import {
     updateDoc,
     deleteDoc,
     query,
+    where,
     orderBy,
     arrayUnion,
     arrayRemove,
@@ -19,6 +20,15 @@ const eventsCollection = collection(db, 'events')
 export async function listEvents() {
     const snap = await getDocs(query(eventsCollection, orderBy('date')))
     return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
+export async function listUserEvents(userId) {
+    const snap = await getDocs(
+        query(eventsCollection, where('attendees', 'array-contains', userId)),
+    )
+    return snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => a.date.localeCompare(b.date))
 }
 
 export async function getEvent(id) {
