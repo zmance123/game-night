@@ -7,7 +7,13 @@
         <div class="form-row">
             <div class="form-group col-md-4">
                 <label>Date</label>
-                <input v-model="form.date" type="date" class="form-control" required />
+                <input
+                    v-model="form.date"
+                    type="date"
+                    :min="minDate"
+                    class="form-control"
+                    required
+                />
             </div>
             <div class="form-group col-md-4">
                 <label>Time</label>
@@ -52,6 +58,7 @@
 
 <script setup>
     import { ref, computed } from 'vue'
+    import { todayIso } from '@/utils/dateUtils.js'
 
     const empty = () => ({
         title: '',
@@ -88,6 +95,7 @@
     )
 
     const submitLabel = computed(() => (props.initial ? 'Save changes' : 'Schedule event'))
+    const minDate = props.initial ? null : todayIso()
 
     function submit() {
         const games = props.availableGames

@@ -37,7 +37,7 @@
                 <input
                     v-model.number="form.maxPlayers"
                     type="number"
-                    min="1"
+                    :min="form.minPlayers"
                     class="form-control"
                 />
             </div>

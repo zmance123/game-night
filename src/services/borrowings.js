@@ -16,7 +16,7 @@ const BORROW_DAYS = 14
 
 export async function borrowGame(game, userId, userName) {
     const now = new Date()
-    const returnBy = addDays(now, BORROW_DAYS)
+    const returnBy = addDays(now, BORROW_DAYS).toISOString()
 
     await addDoc(borrowingsCollection, {
         gameId: game.id,
@@ -24,10 +24,11 @@ export async function borrowGame(game, userId, userName) {
         userId,
         userName,
         borrowedAt: now.toISOString(),
-        returnBy: returnBy.toISOString(),
+        returnBy,
         returnedAt: null,
     })
-    await updateDoc(doc(db, 'games', game.id), { available: false })
+    await updateDoc(doc(db, 'games', game.id), { available: false, returnBy })
+    return returnBy
 }
 
 export async function listUserBorrowings(userId) {
@@ -49,5 +50,5 @@ export async function listActiveBorrowings() {
 
 export async function returnBorrowing(borrowingId, gameId) {
     await updateDoc(doc(db, 'borrowings', borrowingId), { returnedAt: new Date().toISOString() })
-    await updateDoc(doc(db, 'games', gameId), { available: true })
+    await updateDoc(doc(db, 'games', gameId), { available: true, returnBy: null })
 }

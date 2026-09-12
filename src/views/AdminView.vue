@@ -105,6 +105,7 @@
                                 </button>
                                 <button
                                     class="btn btn-sm btn-outline-danger"
+                                    :disabled="borrowings.some((b) => b.gameId === g.id)"
                                     @click="removeGame(g)"
                                 >
                                     Delete
@@ -282,9 +283,10 @@
     import { formatDate, todayIso } from '@/utils/dateUtils.js'
 
     const authStore = useAuthStore()
-    const { response, setSuccess, setError } = useResponse()
+    const { response, setSuccess, setError, clear } = useResponse()
 
     const tab = ref('games')
+    watch(tab, clear)
     const games = ref([])
     const events = ref([])
     const borrowings = ref([])

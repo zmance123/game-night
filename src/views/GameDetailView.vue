@@ -11,6 +11,9 @@
                     <span class="badge badge-light mr-2">{{ game.genre }}</span>
                     <span :class="game.available ? 'badge badge-success' : 'badge badge-danger'">
                         {{ game.available ? 'Available' : 'Borrowed' }}
+                        <template v-if="!game.available && game.returnBy">
+                            until {{ formatDate(game.returnBy) }}
+                        </template>
                     </span>
                     <span v-if="game.averageRating" class="ml-2 text-muted">
                         {{ game.averageRating.toFixed(1) }} / 5
@@ -128,6 +131,7 @@
     import { useAuthStore } from '@/stores/authStore.js'
     import { listRatings, addRating } from '@/services/ratings.js'
     import { useResponse } from '@/composables/useResponse.js'
+    import { formatDate } from '@/utils/dateUtils.js'
 
     const route = useRoute()
     const authStore = useAuthStore()
@@ -166,7 +170,7 @@
         busy.value = true
         clearBorrowResponse()
         try {
-            await borrowGame(game.value, user.value.uid, authStore.displayName)
+            game.value.returnBy = await borrowGame(game.value, user.value.uid, authStore.displayName)
             game.value.available = false
         } catch (error) {
             setBorrowError('Could not borrow: ', error)
