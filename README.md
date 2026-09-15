@@ -3,6 +3,8 @@
 Web aplikacija za društvo koje organizira večeri društvenih igara: katalog igara, posudba,
 prijave na termine i ocjene.
 
+Aplikacija: [Vercel](https://game-night-smoky.vercel.app)
+
 Prototip sučelja: [Figma](https://www.figma.com/design/n17L3fteAtwLBAdslUfIL1/Game-Night?node-id=6-848&t=qZoNvgIr6s1ICWaL-1)
 
 ## O projektu
