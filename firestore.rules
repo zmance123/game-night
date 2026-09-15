@@ -1,0 +1,111 @@
+rules_version = '2';
+
+service cloud.firestore {
+    match /databases/{database}/documents {
+
+        function signedIn() {
+            return request.auth != null;
+        }
+
+        function isAdmin() {
+            return signedIn()
+                && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+        }
+
+        function onlyChanged(fields) {
+            return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+        }
+
+        // Korisnici - uloga se pri registraciji uvijek postavlja na 'user'
+        match /users/{uid} {
+            allow read: if request.auth.uid == uid || isAdmin();
+            allow create: if request.auth.uid == uid && request.resource.data.role == 'user';
+            allow update, delete: if isAdmin();
+        }
+
+        // Igre - admin uredjuje, korisnik mijenja samo posudbu i ocjenu
+        match /games/{gameId} {
+            function borrowUpdate() {
+                return signedIn()
+                    && onlyChanged(['available', 'returnBy'])
+                    && resource.data.available == true
+                    && request.resource.data.available == false
+                    && request.resource.data.returnBy is string;
+            }
+
+            function ratingUpdate() {
+                return signedIn()
+                    && onlyChanged(['averageRating', 'ratingCount'])
+                    && request.resource.data.averageRating >= 1
+                    && request.resource.data.averageRating <= 5
+                    && request.resource.data.ratingCount is int;
+            }
+
+            allow read: if true;
+            allow create, delete: if isAdmin();
+            allow update: if isAdmin() || borrowUpdate() || ratingUpdate();
+
+            // Ocjene - jedna po korisniku, id dokumenta je uid
+            match /ratings/{uid} {
+                allow read: if true;
+                allow create, update: if request.auth.uid == uid
+                    && request.resource.data.userId == uid
+                    && request.resource.data.score is number
+                    && request.resource.data.score >= 1
+                    && request.resource.data.score <= 5;
+                allow delete: if isAdmin();
+            }
+        }
+
+        // Termini - admin uredjuje, korisnik se prijavljuje i odjavljuje samo sebe
+        match /events/{eventId} {
+            function attendees() {
+                return resource.data.get('attendees', []);
+            }
+
+            function registered() {
+                return resource.data.get('registered', 0);
+            }
+
+            function register() {
+                return signedIn()
+                    && onlyChanged(['attendees', 'registered'])
+                    && !(request.auth.uid in attendees())
+                    && request.resource.data.attendees == attendees().concat([request.auth.uid])
+                    && request.resource.data.registered == registered() + 1
+                    && request.resource.data.registered <= resource.data.capacity;
+            }
+
+            function cancel() {
+                return signedIn()
+                    && onlyChanged(['attendees', 'registered'])
+                    && request.auth.uid in attendees()
+                    && request.resource.data.attendees == attendees().removeAll([request.auth.uid])
+                    && request.resource.data.registered == registered() - 1;
+            }
+
+            allow read: if true;
+            allow create, delete: if isAdmin();
+            allow update: if isAdmin() || register() || cancel();
+        }
+
+        // Posudbe - korisnik vidi i stvara svoje, povrat oznacava admin
+        match /borrowings/{borrowingId} {
+            allow read: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+            allow create: if signedIn()
+                && request.resource.data.userId == request.auth.uid
+                && request.resource.data.returnedAt == null
+                && get(/databases/$(database)/documents/games/$(request.resource.data.gameId)).data.available == true;
+            allow update: if isAdmin();
+        }
+
+        // Obavijesti - samo vlasnik, a za nepostojeci dokument dopusteno je provjeriti postoji li
+        match /notifications/{notificationId} {
+            allow read: if signedIn() && (resource == null || resource.data.userId == request.auth.uid);
+            allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+            allow update: if signedIn()
+                && resource.data.userId == request.auth.uid
+                && onlyChanged(['read']);
+        }
+    }
+}
