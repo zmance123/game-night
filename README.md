@@ -5,14 +5,14 @@ prijave na termine i ocjene.
 
 Aplikacija: [Vercel](https://game-night-smoky.vercel.app)
 
-Prototip sučelja: [Figma](https://www.figma.com/design/n17L3fteAtwLBAdslUfIL1/Game-Night?node-id=6-848&t=qZoNvgIr6s1ICWaL-1)
+Prototip sučelja: [Figma](https://www.figma.com/proto/n17L3fteAtwLBAdslUfIL1/Game-Night?node-id=7-870&p=f&viewport=-4357%2C200%2C0.34&t=ofglB11IKOJx1lSC-1&scaling=min-zoom&content-scaling=fixed&starting-point-node-id=7%3A870&page-id=6%3A848)
 
 ## O projektu
 
 - Autor: Zvonimir Mance
-- Ustanova: Fakultet informatike u Puli
-- Kolegij: Programsko inženjerstvo
-- Mentor: doc. dr. sc. Nikola Tanković
+- Ustanova: [Fakultet informatike u Puli](https://fipu.unipu.hr)
+- Kolegij: [Programsko inženjerstvo](https://ntankovic.unipu.hr/pi)
+- Mentor: [doc. dr. sc. Nikola Tanković](https://ntankovic.unipu.hr)
 
 ## Funkcionalnosti
 
